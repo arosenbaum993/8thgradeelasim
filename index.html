@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Georgia Milestones Grade 8 ELA Practice Simulation</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --blue-dark: #1B3A6B;
+    --blue-mid: #2E6DA4;
+    --blue-light: #D6E8F5;
+    --red: #C0392B;
+    --green: #1A7A4A;
+    --gold: #D4A017;
+    --gray-light: #F5F5F5;
+    --gray-border: #CCCCCC;
+    --text: #222222;
+    --white: #FFFFFF;
+    --font: 'Georgia', serif;
+    --font-ui: 'Arial', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: #E8EDF2;
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== GATE SCREEN ===== */
+  #gate {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+  }
+
+  .gate-box {
+    background: white;
+    border-radius: 8px;
+    padding: 48px 52px;
+    width: 520px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+  }
+
+  .gate-logo {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .gate-logo h1 {
+    font-family: var(--font-ui);
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .gate-logo h2 {
+    font-size: 22px;
+    color: var(--blue-dark);
+    margin-top: 6px;
+  }
+
+  .gate-logo .subtitle {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+  }
+
+  .divider { border: none; border-top: 2px solid var(--blue-dark); margin: 20px 0; }
+
+  .gate-field { margin-bottom: 20px; }
+  .gate-field label {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .gate-field input, .gate-field select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--gray-border);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+
+  .gate-field input:focus, .gate-field select:focus {
+    outline: none;
+    border-color: var(--blue-mid);
+  }
+
+  .gate-info {
+    background: var(--blue-light);
+    border-left: 4px solid var(--blue-mid);
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--blue-dark);
+  }
+
+  .gate-info strong { display: block; margin-bottom: 4px; }
+
+  .btn-start {
+    width: 100%;
+    padding: 14px;
+    background: var(--blue-dark);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s;
+  }
+
+  .btn-start:hover { background: var(--blue-mid); }
+
+  /* ===== TEST LAYOUT ===== */
+  #testScreen { display: none; height: 100vh; flex-direction: column; }
+
+  /* Header bar */
+  .test-header {
+    background: var(--blue-dark);
+    color: white;
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .test-header .hdr-left {
+    font-family: var(--font-ui);
+    font-size: 13px;
+  }
+
+  .test-header .hdr-left strong { font-size: 15px; display: block; }
+
+  #timerDisplay {
+    font-family: 'Courier New', monospace;
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    background: rgba(255,255,255,0.12);
+    padding: 6px 18px;
+    border-radius: 4px;
+    min-width: 100px;
+    text-align: center;
+    transition: color 0.3s, background 0.3s;
+  }
+
+  #timerDisplay.warning { color: #FFD700; background: rgba(212, 160, 23, 0.25); }
+
+  .hdr-right {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    text-align: right;
+  }
+
+  /* Body: question palette + main content */
+  .test-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Left palette */
+  .palette-panel {
+    width: 180px;
+    background: var(--blue-dark);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 12px 10px;
+  }
+
+  .palette-title {
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: bold;
+    color: rgba(255,255,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  .pq-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 3px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1px;
+    position: relative;
+  }
+
+  .pq-btn:hover { transform: scale(1.08); }
+  .pq-btn.answered { background: #1A7A4A; color: white; }
+  .pq-btn.current { outline: 3px solid #FFD700; }
+  .pq-btn.flagged::after {
+    content: '🚩';
+    font-size: 8px;
+    position: absolute;
+    top: 1px;
+    right: 1px;
+  }
+
+  .palette-legend {
+    margin-top: 14px;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0;
+  }
+
+  /* Main question area */
+  .question-area {
+    flex: 1;
+    overflow-y: auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Section header (appears before passage groups) */
+  .section-header {
+    background: var(--blue-dark);
+    color: white;
+    padding: 10px 28px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  /* Passage pane (when applicable) */
+  .passage-container {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .passage-pane {
+    width: 50%;
+    overflow-y: auto;
+    border-right: 2px solid var(--gray-border);
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.75;
+    background: #FAFAFA;
+    flex-shrink: 0;
+  }
+
+  .passage-pane h3 {
+    font-size: 14px;
+    font-family: var(--font-ui);
+    color: var(--blue-dark);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+  }
+
+  .passage-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 3px;
+    font-family: var(--font-ui);
+  }
+
+  .passage-byline {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 14px;
+    font-family: var(--font-ui);
+    font-style: italic;
+  }
+
+  .passage-pane p { margin-bottom: 12px; }
+  .passage-pane .line-num { color: #999; font-size: 11px; font-family: monospace; margin-right: 6px; }
+
+  /* Question pane */
+  .question-pane {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px 28px;
+    min-width: 0;
+  }
+
+  /* Standalone question (no passage) */
+  .standalone-question {
+    padding: 24px 32px;
+    flex: 1;
+  }
+
+  .qnum-badge {
+    display: inline-block;
+    background: var(--blue-dark);
+    color: white;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 10px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  .domain-badge {
+    display: inline-block;
+    background: var(--blue-light);
+    color: var(--blue-dark);
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  .item-type-badge {
+    display: inline-block;
+    background: #FFF3CD;
+    color: #7D5A00;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+  }
+
+  .q-stem {
+    font-size: 15px;
+    line-height: 1.65;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+
+  .multiselect-instruction {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    background: var(--blue-light);
+    border-left: 4px solid var(--blue-mid);
+    padding: 6px 12px;
+    margin-bottom: 14px;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* Options */
+  .options-list { list-style: none; }
+
+  .option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border: 2px solid var(--gray-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .option-item:hover { border-color: var(--blue-mid); background: var(--blue-light); }
+  .option-item.selected { border-color: var(--blue-dark); background: var(--blue-light); }
+
+  .option-item input[type=radio], .option-item input[type=checkbox] {
+    margin-top: 3px;
+    flex-shrink: 0;
+    accent-color: var(--blue-dark);
+    width: 16px; height: 16px;
+  }
+
+  .option-letter {
+    font-family: var(--font-ui);
+    font-weight: bold;
+    color: var(--blue-dark);
+    flex-shrink: 0;
+    min-width: 20px;
+  }
+
+  /* Drag and drop */
+  .dnd-container { margin-bottom: 12px; }
+  .dnd-label {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: bold;
+    color: #555;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .drag-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    background: #F0F4F8;
+    border: 2px dashed var(--gray-border);
+    border-radius: 4px;
+    min-height: 52px;
+  }
+
+  .drag-item {
+    background: white;
+    border: 2px solid var(--blue-mid);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 13px;
+    cursor: grab;
+    user-select: none;
+    font-family: var(--font-ui);
+    transition: all 0.15s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .drag-item:hover { background: var(--blue-light); transform: scale(1.02); }
+  .drag-item.dragging { opacity: 0.4; }
+
+  .drop-zone {
+    min-height: 48px;
+    border: 2px dashed #999;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 6px;
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .drop-zone.drag-over { border-color: var(--blue-dark); background: var(--blue-light); }
+  .drop-zone .zone-label {
+    font-size: 12px;
+    color: #999;
+    font-family: var(--font-ui);
+    font-style: italic;
+    position: absolute;
+    pointer-events: none;
+  }
+
+  .drop-zone:has(.drag-item) .zone-label { display: none; }
+
+  .drop-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .drop-row-label {
+    font-size: 13px;
+    font-family: var(--font-ui);
+    min-width: 120px;
+    color: var(--text);
+  }
+
+  /* Question nav footer */
+  .q-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-top: 2px solid var(--gray-border);
+    background: var(--gray-light);
+    flex-shrink: 0;
+  }
+
+  .q-nav button {
+    padding: 9px 22px;
+    border: 2px solid var(--blue-dark);
+    border-radius: 4px;
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-nav-prev { background: white; color: var(--blue-dark); }
+  .btn-nav-prev:hover { background: var(--blue-light); }
+  .btn-flag {
+    background: white;
+    color: var(--blue-dark);
+    border-color: var(--blue-mid);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-flag.flagged { background: #FFF3CD; color: #7D5A00; border-color: var(--gold); }
+  .btn-nav-next { background: var(--blue-dark); color: white; }
+  .btn-nav-next:hover { background: var(--blue-mid); }
+  .btn-submit { background: var(--green); color: white; border-color: var(--green); }
+  .btn-submit:hover { background: #145E38; }
+
+  /* ===== ESSAY SECTION ===== */
+  .essay-section {
+    padding: 24px 32px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .essay-sources {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 22px;
+  }
+
+  .source-card {
+    border: 1px solid var(--gray-border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .source-card-header {
+    background: var(--blue-dark);
+    color: white;
+    padding: 8px 14px;
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .source-card-body {
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.65;
+    max-height: 280px;
+    overflow-y: auto;
+    background: #FAFAFA;
+  }
+
+  .source-card-body h4 {
+    font-size: 13px;
+    font-family: var(--font-ui);
+    margin-bottom: 4px;
+    color: var(--blue-dark);
+  }
+
+  .source-card-body .byline {
+    font-size: 11px;
+    color: #777;
+    font-style: italic;
+    margin-bottom: 10px;
+    font-family: var(--font-ui);
+  }
+
+  .source-card-body p { margin-bottom: 8px; }
+
+  .essay-prompt-box {
+    background: #FFF9E8;
+    border: 2px solid var(--gold);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+
+  .essay-prompt-box h3 {
+    font-family: var(--font-ui);
+    font-size: 13px;
+    font-weight: bold;
+    color: #7D5A00;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  .essay-prompt-box p {
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  .writers-checklist {
+    background: white;
+    border: 1px solid var(--gray-border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 12px;
+  }
+
+  .writers-checklist h4 {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .checklist-item {
+    font-size: 12px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    line-height: 1.4;
+  }
+
+  .checklist-item::before { content: '☐'; flex-shrink: 0; }
+
+  #essayTextarea {
+    width: 100%;
+    flex: 1;
+    min-height: 350px;
+    padding: 14px;
+    border: 2px solid var(--gray-border);
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.75;
+    font-family: var(--font);
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  #essayTextarea:focus { outline: none; border-color: var(--blue-mid); }
+
+  .essay-word-count {
+    font-family: var(--font-ui);
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    margin-top: 6px;
+  }
+
+  /* ===== RESULTS SCREEN ===== */
+  #resultsScreen {
+    display: none;
+    min-height: 100vh;
+    background: #E8EDF2;
+    padding: 32px;
+    font-family: var(--font-ui);
+  }
+
+  .results-header {
+    background: var(--blue-dark);
+    color: white;
+    padding: 24px 32px;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .results-header h1 { font-size: 22px; }
+  .results-header .student-info { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+
+  .achievement-badge {
+    text-align: center;
+    padding: 14px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    min-width: 180px;
+  }
+
+  .badge-beginning { background: #FDECEA; color: var(--red); border: 2px solid var(--red); }
+  .badge-developing { background: #FFF3CD; color: #7D5A00; border: 2px solid var(--gold); }
+  .badge-proficient { background: #E8F5E9; color: #1A7A4A; border: 2px solid #1A7A4A; }
+  .badge-distinguished { background: #E3F2FD; color: var(--blue-dark); border: 2px solid var(--blue-dark); }
+
+  .results-body {
+    background: white;
+    border-radius: 0 0 8px 8px;
+    padding: 28px 32px;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    margin-bottom: 28px;
+  }
+
+  .results-section h3 {
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--blue-light);
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+  }
+
+  .score-big {
+    text-align: center;
+    padding: 20px;
+    background: var(--blue-light);
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+
+  .score-big .score-num {
+    font-size: 52px;
+    font-weight: bold;
+    color: var(--blue-dark);
+    line-height: 1;
+  }
+
+  .score-big .score-label { font-size: 13px; color: #555; margin-top: 4px; }
+
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .review-item {
+    border-radius: 4px;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 12px;
+  }
+
+  .review-item .ri-num { font-weight: bold; font-size: 14px; }
+  .review-item .ri-domain { font-size: 10px; margin-top: 2px; color: #555; }
+  .review-item.correct { background: #E8F5E9; color: #1A7A4A; border: 1px solid #A5D6A7; }
+  .review-item.incorrect { background: #FDECEA; color: var(--red); border: 1px solid #FFCDD2; }
+  .review-item.skipped { background: #FFF9C4; color: #7D5A00; border: 1px solid #FFF176; }
+
+  .domain-bar { margin-bottom: 10px; }
+  .domain-bar-label { font-size: 12px; color: #333; margin-bottom: 3px; display: flex; justify-content: space-between; }
+  .domain-bar-track { height: 16px; background: #EEE; border-radius: 8px; overflow: hidden; }
+  .domain-bar-fill { height: 100%; border-radius: 8px; transition: width 0.8s ease; background: var(--blue-mid); }
+
+  .flagged-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .flag-tag {
+    background: #FFF3CD;
+    color: #7D5A00;
+    border: 1px solid var(--gold);
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 12px;
+  }
+
+  .results-footer { margin-top: 24px; text-align: center; }
+  .results-footer p { font-size: 13px; color: #666; font-style: italic; }
+
+  /* Vocab flag button */
+  .btn-vocab-flag {
+    background: white;
+    color: var(--blue-dark);
+    border: 1px solid var(--blue-mid);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-family: var(--font-ui);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+  .btn-vocab-flag.flagged { background: #FFF3CD; border-color: var(--gold); color: #7D5A00; }
+
+  .q-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #EEE; }
+  ::-webkit-scrollbar-thumb { background: #AAA; border-radius: 3px; }
+
+  .hidden { display: none !important; }
+
+  /* DOK label */
+  .dok-badge {
+    display: inline-block;
+    font-family: var(--font-ui);
+    font-size: 9px;
+    font-weight: bold;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: #EEE;
+    color: #555;
+    margin-left: 4px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== GATE SCREEN ===== -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">
+      <h1>Georgia Milestones Assessment System</h1>
+      <h2>Grade 8 English Language Arts</h2>
+      <div class="subtitle">Practice Simulation — Effective 2025–2026 School Year</div>
+    </div>
+    <hr class="divider">
+    <div class="gate-info">
+      <strong>Test Information</strong>
+      Session 1: Selected Response &amp; Technology-Enhanced Items (approx. 45 min)<br>
+      Session 2: Extended Writing Task — 3-Source Argumentative Essay (approx. 35 min)<br>
+      Total time: 50 minutes | Timer starts when you click BEGIN
+    </div>
+    <div class="gate-field">
+      <label>Student Name</label>
+      <input type="text" id="gateNameInput" placeholder="Last Name, First Name" autocomplete="off">
+    </div>
+    <div class="gate-field">
+      <label>Class Period</label>
+      <select id="gatePeriodInput">
+        <option value="">— Select Period —</option>
+        <option>1st Period</option>
+        <option>2nd Period</option>
+        <option>3rd Period</option>
+        <option>4th Period</option>
+        <option>5th Period</option>
+        <option>6th Period</option>
+        <option>7th Period</option>
+      </select>
+    </div>
+    <button class="btn-start" onclick="startTest()">BEGIN TEST</button>
+  </div>
+</div>
+
+<!-- ===== TEST SCREEN ===== -->
+<div id="testScreen" style="display:none; flex-direction:column; height:100vh;">
+
+  <div class="test-header">
+    <div class="hdr-left">
+      <strong>Georgia Milestones Grade 8 ELA Practice</strong>
+      <span id="hdrName"></span>
+    </div>
+    <div id="timerDisplay">50:00</div>
+    <div class="hdr-right">
+      Question <span id="hdrQNum">1</span> of <span id="hdrTotal">30</span><br>
+      <span id="hdrPeriod" style="opacity:0.7;"></span>
+    </div>
+  </div>
+
+  <div class="test-body">
+    <!-- Palette -->
+    <div class="palette-panel">
+      <div class="palette-title">Questions</div>
+      <div class="palette-grid" id="paletteGrid"></div>
+      <div class="palette-legend" style="margin-top:16px;">
+        <div class="legend-item"><div class="legend-dot" style="background:#1A7A4A;"></div> Answered</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.15);"></div> Unanswered</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(255,255,255,0.15); outline:2px solid #FFD700;"></div> Current</div>
+        <div class="legend-item">🚩 Vocab Flagged</div>
+      </div>
+    </div>
+
+    <!-- Question area -->
+    <div class="question-area" id="questionArea">
+      <!-- dynamically populated -->
+    </div>
+  </div>
+
+  <!-- Nav footer -->
+  <div class="q-nav">
+    <button class="btn-nav-prev" onclick="navigate(-1)">◀ Previous</button>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn-flag" id="btnFlag" onclick="toggleFlag()">🚩 Flag Vocabulary</button>
+    </div>
+    <button class="btn-nav-next" id="btnNext" onclick="navigate(1)">Next ▶</button>
+  </div>
+
+</div>
+
+<!-- ===== RESULTS SCREEN ===== -->
+<div id="resultsScreen" style="display:none;">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="results-header">
+      <div>
+        <h1>Practice Test Results</h1>
+        <div class="student-info" id="resStudentInfo"></div>
+      </div>
+      <div id="resAchievementBadge" class="achievement-badge"></div>
+    </div>
+    <div class="results-body">
+      <div class="results-grid">
+        <div class="results-section">
+          <h3>Score Summary</h3>
+          <div class="score-big">
+            <div class="score-num" id="resScoreNum">—</div>
+            <div class="score-label" id="resScoreLabel">points correct</div>
+          </div>
+          <div style="font-size:13px;color:#555;margin-bottom:8px;">Time Used: <strong id="resTimeUsed">—</strong></div>
+          <div style="font-size:12px;color:#888;font-style:italic;">Note: The Extended Writing Task (8 pts) is scored by your teacher using the 3-Trait Rubric. Selected-response score shown above.</div>
+        </div>
+        <div class="results-section">
+          <h3>Domain Performance</h3>
+          <div id="resDomainBars"></div>
+        </div>
+      </div>
+      <div class="results-section" style="margin-bottom:24px;">
+        <h3>Item-by-Item Review (Selected Response)</h3>
+        <div class="review-grid" id="resReviewGrid"></div>
+        <div style="margin-top:10px;font-size:12px;color:#555;font-style:italic;">Green = Correct &nbsp;|&nbsp; Red = Incorrect &nbsp;|&nbsp; Yellow = Skipped &nbsp;|&nbsp; No answer explanations are shown — review with your teacher.</div>
+      </div>
+      <div class="results-section">
+        <h3>🚩 Vocabulary-Flagged Items</h3>
+        <div class="flagged-list" id="resFlaggedList"></div>
+        <div style="margin-top:8px;font-size:12px;color:#555;font-style:italic;">These questions contained vocabulary you flagged as unfamiliar. Review these terms with your teacher.</div>
+      </div>
+      <div class="results-footer">
+        <p>Georgia Milestones Grade 8 ELA Practice Simulation — 2025–2026 School Year<br>
+        Achievement levels: Beginning (0–54%) | Developing (55–69%) | Proficient (70–84%) | Distinguished (85–100%)</p>
+        <p style="margin-top:8px;color:#999;">Your essay response has been saved for teacher review. Self-score using the 3-Trait Writing Rubric.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: ALL TEST ITEMS
+// ============================================================
+// Domains: T=Techniques, C=Context, SS=Structure&Style, RA=Research&Analysis, L=Language, W=Writing
+// DOK distribution target: DOK1=5-15%, DOK2=65-75%, DOK3=15-25%
+// 30 items + 1 essay (Essay is item 31, always last)
+
+const ITEMS = [
+  // ===== SESSION 1: READING ITEMS =====
+  // Passage 1: Literary (Narrative Techniques)
+  {
+    id: 1, type: 'SR', domain: 'T-Narrative', dok: 2,
+    passage: 'P1',
+    stem: 'Read the following passage from a short story, then answer the questions.',
+    question: 'Which of the following best describes how the author uses the thunderstorm at the beginning of the passage to develop the narrative?',
+    options: [
+      'It establishes the setting as dangerous and foreshadows the conflict between Marcus and his brother.',
+      'It provides background information about the history of the small town where Marcus grew up.',
+      'It contrasts with Marcus\'s cheerful mood, creating irony that is resolved by the end of the story.',
+      'It functions as a symbol for Marcus\'s confusion about his future career plans.'
+    ],
+    correct: [0],
+    vocabTerms: ['foreshadowing', 'narrative device']
+  },
+  {
+    id: 2, type: 'MS', domain: 'T-Narrative', dok: 3,
+    passage: 'P1',
+    stem: null,
+    question: 'Select ALL details from the passage that reveal Marcus\'s internal conflict about leaving his hometown.',
+    options: [
+      'Marcus packed his suitcase twice, then unpacked it once more before dawn.',
+      'The old oak tree in the yard had been struck by lightning three summers ago.',
+      'He pressed his forehead against the cold window glass and watched the rain.',
+      'His mother had left the porch light on, even though she knew he would not return until spring.',
+      'The bus schedule was pinned to the refrigerator with a magnet from the county fair.'
+    ],
+    correct: [0, 2, 3],
+    vocabTerms: ['internal conflict', 'characterization']
+  },
+  {
+    id: 3, type: 'SR', domain: 'T-Narrative', dok: 3,
+    passage: 'P1',
+    stem: null,
+    question: 'The author ends the passage with Marcus walking away without looking back. How does this detail connect to the story\'s central theme?',
+    options: [
+      'It shows that Marcus is angry at his family and does not care about their feelings.',
+      'It reflects the theme that growth often requires leaving behind the familiar, even when it is painful.',
+      'It suggests that Marcus has forgotten everything about his childhood and is starting fresh.',
+      'It implies that Marcus is afraid to face the consequences of his decision to leave.'
+    ],
+    correct: [1],
+    vocabTerms: ['theme', 'character development']
+  },
+
+  // Passage 2: Expository/Informational
+  {
+    id: 4, type: 'SR', domain: 'T-Expository', dok: 2,
+    passage: 'P2',
+    stem: 'Read the following excerpt from an informational article, then answer the questions.',
+    question: 'What is the central idea of this passage?',
+    options: [
+      'Ocean plastic pollution is caused primarily by industries rather than individual consumers.',
+      'Microplastics have entered the global food chain and pose risks that scientists are still measuring.',
+      'Recycling programs have effectively reduced the amount of plastic waste entering the oceans.',
+      'Governments in developing nations bear the greatest responsibility for addressing ocean pollution.'
+    ],
+    correct: [1],
+    vocabTerms: ['central idea', 'main idea']
+  },
+  {
+    id: 5, type: 'MS', domain: 'T-Expository', dok: 3,
+    passage: 'P2',
+    stem: null,
+    question: 'Select ALL techniques the author uses to develop the central idea in this passage.',
+    options: [
+      'Statistics about the volume of plastic entering oceans each year',
+      'A personal anecdote about the author\'s experience swimming in the Pacific',
+      'Expert testimony from marine biologists studying microplastic absorption',
+      'A comparison of two nations\' recycling policies to argue for global standards',
+      'Key details about how microplastics travel through the food chain'
+    ],
+    correct: [0, 2, 4],
+    vocabTerms: ['expository technique', 'evidence', 'statistic']
+  },
+
+  // Passage 3: Two Authors / Same Topic
+  {
+    id: 6, type: 'SR', domain: 'T-Expository', dok: 3,
+    passage: 'P3',
+    stem: 'Read both articles about urban gardening programs, then answer the questions.',
+    question: 'Both authors write about the impact of urban gardens on communities. How do their presentations of this topic DIFFER most significantly?',
+    options: [
+      'Author 1 focuses on economic benefits using business data; Author 2 emphasizes social and health benefits using community research.',
+      'Author 1 argues urban gardens are ineffective; Author 2 argues they are the most important urban initiative.',
+      'Author 1 uses mostly anecdotes while Author 2 relies exclusively on government statistics.',
+      'Author 1 addresses a national audience while Author 2 writes only for local residents.'
+    ],
+    correct: [0],
+    vocabTerms: ['author\'s perspective', 'emphasis', 'interpretation']
+  },
+  {
+    id: 7, type: 'SR', domain: 'C', dok: 2,
+    passage: 'P3',
+    stem: null,
+    question: 'Author 2\'s background as a community health nurse most likely influences the article by —',
+    options: [
+      'causing her to ignore the economic arguments made by Author 1',
+      'leading her to emphasize physical and mental health outcomes rather than financial data',
+      'making her biased against urban development projects in low-income neighborhoods',
+      'limiting her ability to understand the gardening techniques she describes'
+    ],
+    correct: [1],
+    vocabTerms: ['author\'s bias', 'perspective', 'credibility']
+  },
+
+  // Standalone reading items
+  {
+    id: 8, type: 'SR', domain: 'C', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'A student reads an article published by a company that manufactures bottled water. The article claims that tap water is unsafe for drinking. Which of the following BEST describes a limitation of this source?',
+    options: [
+      'The article is too short to contain reliable information about water safety.',
+      'The source has a financial interest in the topic that may affect the objectivity of its claims.',
+      'Company articles are never allowed to discuss health-related topics.',
+      'The article should be dismissed because it was not written by a scientist.'
+    ],
+    correct: [1],
+    vocabTerms: ['bias', 'credibility', 'author\'s perspective']
+  },
+  {
+    id: 9, type: 'SR', domain: 'C', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'A student is analyzing a historical speech given in 1963 during the Civil Rights Movement. How does understanding the historical context of the speech MOST help the reader?',
+    options: [
+      'It allows the reader to judge whether the speaker was an effective public performer.',
+      'It helps the reader understand why certain words and images carried urgent meaning for that specific audience at that time.',
+      'It proves that the speech\'s arguments are no longer relevant to modern readers.',
+      'It explains why the speech uses informal language rather than formal rhetoric.'
+    ],
+    correct: [1],
+    vocabTerms: ['context', 'historical background', 'audience']
+  },
+  {
+    id: 10, type: 'SR', domain: 'SS', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Read this paragraph opening: "The factory had been silent for three years. Rust crept along the loading docks. The parking lot, once packed every morning, now held only weeds and an abandoned shopping cart." What organizational structure does this description most clearly use?',
+    options: [
+      'Cause and effect: the factory closing caused the parking lot to be empty',
+      'Compare and contrast: the author is comparing two different factories',
+      'Descriptive: the author uses specific sensory details to create a vivid picture of a setting',
+      'Problem and solution: the abandoned factory is a problem that needs to be solved'
+    ],
+    correct: [2],
+    vocabTerms: ['organizational structure', 'descriptive structure', 'text structure']
+  },
+  {
+    id: 11, type: 'SR', domain: 'SS', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'An author writes: "The decision was a stone dropped in still water — the consequences rippled outward for years." What is the most likely reason the author chose this figurative language?',
+    options: [
+      'To inform the reader that the story takes place near a body of water',
+      'To suggest that the decision was made carelessly, without thought for others',
+      'To convey that the effects of the decision spread widely and continued over time',
+      'To compare the difficulty of making a decision to the physical effort of lifting a stone'
+    ],
+    correct: [2],
+    vocabTerms: ['figurative language', 'metaphor', 'connotation']
+  },
+  {
+    id: 12, type: 'MS', domain: 'T-Argumentative', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'Select ALL elements of an effective argumentative text that are present in this paragraph:\n\n"Schools should extend lunch periods to at least 45 minutes. Research by the American Academy of Pediatrics shows that students who eat quickly are less likely to consume adequate nutrition, which affects afternoon performance. Some argue that longer lunch periods take instructional time away from academics; however, studies show that well-fed students actually demonstrate greater focus and productivity during afternoon classes. Therefore, extending lunch time is an investment in academic success, not a reduction of it."',
+    options: [
+      'A clear claim stated at the beginning',
+      'Supporting evidence from a credible source',
+      'An identified counterclaim',
+      'A rebuttal to the counterclaim',
+      'Emotional appeals using personal stories'
+    ],
+    correct: [0, 1, 2, 3],
+    vocabTerms: ['claim', 'counterclaim', 'rebuttal', 'evidence']
+  },
+  {
+    id: 13, type: 'SR', domain: 'T-Argumentative', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Which sentence from a student essay BEST serves as a rebuttal to the counterclaim "Social media causes students to isolate themselves socially"?',
+    options: [
+      'Social media is used by billions of people around the world every day.',
+      'While critics argue that social media promotes isolation, research shows that teens who use social platforms to maintain friendships report higher social connectedness than those who do not.',
+      'Social media companies make a great deal of money from advertising to young people.',
+      'Students should be more careful about how much time they spend on their phones.'
+    ],
+    correct: [1],
+    vocabTerms: ['rebuttal', 'counterclaim', 'evidence']
+  },
+
+  // Vocabulary items
+  {
+    id: 14, type: 'SR', domain: 'L-Vocab', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Read this sentence: "The scientist\'s findings were met with skepticism by the broader research community, who questioned her methodology." Using context clues, what does the word "skepticism" most likely mean?',
+    options: [
+      'Enthusiasm and praise for new discoveries',
+      'Doubt or disbelief that requires further proof',
+      'Anger about conclusions that challenge established beliefs',
+      'Agreement with the scientist\'s research methods'
+    ],
+    correct: [1],
+    vocabTerms: ['context clues', 'vocabulary in context']
+  },
+  {
+    id: 15, type: 'SR', domain: 'L-Vocab', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'A student is writing about someone who is confident in their abilities. Which word choice has the MOST NEGATIVE connotation?',
+    options: [
+      'assured',
+      'self-reliant',
+      'arrogant',
+      'capable'
+    ],
+    correct: [2],
+    vocabTerms: ['connotation', 'denotation', 'word choice']
+  },
+  {
+    id: 16, type: 'SR', domain: 'L-Vocab', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'The Latin root "bene" means "good" or "well." Using this knowledge, what is the most likely meaning of the word "benefactor"?',
+    options: [
+      'Someone who creates problems or causes harm to others',
+      'A person who provides help or financial support for a cause or person',
+      'An expert who studies the benefits of scientific research',
+      'A document that lists the advantages of a particular program'
+    ],
+    correct: [1],
+    vocabTerms: ['Latin root', 'morphology', 'etymology']
+  },
+  {
+    id: 17, type: 'SR', domain: 'L-Grammar', dok: 1,
+    passage: null,
+    stem: null,
+    question: 'Which sentence uses ACTIVE VOICE correctly?',
+    options: [
+      'The award was presented to the athlete by the coach.',
+      'The report had been submitted before the deadline.',
+      'The student council organized the fundraiser for the school library.',
+      'A decision about the schedule will be made by the administration.'
+    ],
+    correct: [2],
+    vocabTerms: ['active voice', 'passive voice']
+  },
+  {
+    id: 18, type: 'SR', domain: 'L-Grammar', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Which sentence contains a MISPLACED MODIFIER that makes the meaning unclear?',
+    options: [
+      'Running late for the bus, Maya grabbed her backpack and sprinted down the street.',
+      'The committee approved the proposal that had been revised three times.',
+      'Walking to school, the leaves were scattered across the sidewalk by the wind.',
+      'The student who studies most consistently earns the highest grades.'
+    ],
+    correct: [2],
+    vocabTerms: ['misplaced modifier', 'dangling modifier', 'syntax']
+  },
+  {
+    id: 19, type: 'SR', domain: 'L-Grammar', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Which revision of the following sentence BEST demonstrates how to condense two simple sentences into a compound-complex sentence?\n\nOriginal: "She studied all night. She still failed the test. She did not understand the concepts."',
+    options: [
+      'She studied all night, and she still failed the test, and she did not understand the concepts.',
+      'Although she studied all night, she still failed the test because she had not understood the concepts.',
+      'She studied all night; she failed the test; she had no understanding.',
+      'Studying all night, failing the test, not understanding the concepts.'
+    ],
+    correct: [1],
+    vocabTerms: ['compound-complex sentence', 'syntax', 'verb tense']
+  },
+
+  // Research & Analysis items
+  {
+    id: 20, type: 'SR', domain: 'RA', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'A student is writing a research paper about the effects of climate change on coral reefs. Which source would be MOST credible for this paper?',
+    options: [
+      'A personal blog written by a scuba diver who has visited the Great Barrier Reef',
+      'A peer-reviewed study published in a marine biology journal and authored by university researchers',
+      'A travel magazine article about the best places to see coral reefs before they disappear',
+      'A video posted by a social media influencer who is passionate about ocean conservation'
+    ],
+    correct: [1],
+    vocabTerms: ['credibility', 'primary source', 'secondary source']
+  },
+  {
+    id: 21, type: 'SR', domain: 'RA', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'A student wants to use information from a source in their research paper. The source makes an accurate claim, but the claim is about smartphone addiction in adults — the student\'s paper is about technology use among middle school students. Which of the following BEST describes the issue with using this source?',
+    options: [
+      'The source is not credible because it was not written by a teacher.',
+      'The source may be accurate but is not relevant to the specific topic and audience of the paper.',
+      'The source should be excluded because it only discusses one type of technology.',
+      'The source must be excluded because it was not written specifically for academic purposes.'
+    ],
+    correct: [1],
+    vocabTerms: ['relevance', 'credibility', 'research']
+  },
+  {
+    id: 22, type: 'SR', domain: 'RA', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Which sentence BEST demonstrates correct in-text attribution when integrating a source into an argumentative essay?',
+    options: [
+      '"Studies show that students who sleep more do better in school."',
+      'According to a 2023 report by the National Sleep Foundation, teenagers who sleep 8–10 hours per night show significantly higher academic performance than those who sleep fewer than 7 hours.',
+      'The National Sleep Foundation says sleep is really important for teenagers.',
+      'Teenagers should sleep more, and this is proven by science and research studies.'
+    ],
+    correct: [1],
+    vocabTerms: ['MLA citation', 'in-text attribution', 'source integration']
+  },
+
+  // Periods & Movements
+  {
+    id: 23, type: 'SR', domain: 'T-Periods', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'A modern novel features a young protagonist who receives a mysterious call to adventure, faces trials that test their courage, and ultimately transforms through their experiences. This narrative pattern most closely reflects which element drawn from older literary traditions?',
+    options: [
+      'The tragic hero archetype from ancient Greek drama, in which the protagonist falls from greatness',
+      'The hero\'s journey pattern found across myths and legends from many cultures and time periods',
+      'The naturalist movement\'s focus on characters who are determined by their social environment',
+      'The Romantic era\'s emphasis on the beauty of nature over human civilization'
+    ],
+    correct: [1],
+    vocabTerms: ['archetype', 'hero\'s journey', 'literary adaptation', 'time period']
+  },
+
+  // Poetic Techniques
+  {
+    id: 24, type: 'MS', domain: 'T-Poetic', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Read this excerpt from a poem:\n\n"The city breathes — exhales\nits gray-lunged sigh\nacross rooftops.\nEven the clock towers\nforgot to count the hours."\n\nSelect ALL poetic techniques the poet uses in these lines.',
+    options: [
+      'Personification: giving human qualities to the city and clock towers',
+      'Imagery: creating a visual and sensory impression of the urban setting',
+      'Rhyme scheme: a consistent ABAB pattern throughout',
+      'Alliteration: repetition of consonant sounds for effect',
+      'Metaphor: comparing the city\'s pollution to a living creature\'s breath'
+    ],
+    correct: [0, 1, 4],
+    vocabTerms: ['personification', 'imagery', 'metaphor', 'poetic technique']
+  },
+
+  // Structure & Style — constructing
+  {
+    id: 25, type: 'SR', domain: 'SS', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'A student writes this concluding sentence for their argumentative essay: "So in conclusion, this essay has shown that renewable energy is good." Which revision BEST improves this conclusion?',
+    options: [
+      '"Renewable energy: it\'s the future, and the future is now!"',
+      '"Therefore, the evidence presented demonstrates that investing in renewable energy is not merely an environmental choice, but an economic and social imperative for future generations."',
+      '"This essay was about renewable energy and why it is better than fossil fuels."',
+      '"In summary, renewable energy has many benefits as discussed in the paragraphs above."'
+    ],
+    correct: [1],
+    vocabTerms: ['conclusion', 'sense of closure', 'formal style']
+  },
+
+  // Drag and Drop items
+  {
+    id: 26, type: 'DND', domain: 'T-Argumentative', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Drag each text element to the correct part of an argumentative essay structure.',
+    dndItems: [
+      { id: 'a', text: '"Some critics argue that school uniforms limit student self-expression."' },
+      { id: 'b', text: '"However, research shows that schools with uniforms report fewer incidents of clothing-related bullying."' },
+      { id: 'c', text: '"School uniforms improve the learning environment by reducing social distractions."' },
+      { id: 'd', text: '"Therefore, districts should consider mandatory uniform policies as a tool for equity."' }
+    ],
+    dropZones: [
+      { id: 'claim', label: 'Claim' },
+      { id: 'counterclaim', label: 'Counterclaim' },
+      { id: 'rebuttal', label: 'Rebuttal' },
+      { id: 'conclusion', label: 'Conclusion' }
+    ],
+    correctMapping: { 'claim': 'c', 'counterclaim': 'a', 'rebuttal': 'b', 'conclusion': 'd' },
+    vocabTerms: ['claim', 'counterclaim', 'rebuttal', 'conclusion']
+  },
+  {
+    id: 27, type: 'DND', domain: 'T-Narrative', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'Drag the story events into the correct order of plot structure.',
+    dndItems: [
+      { id: 'a', text: 'Amara discovers her missing letter was never sent.' },
+      { id: 'b', text: 'Amara and her sister reconcile at their grandmother\'s house.' },
+      { id: 'c', text: 'Amara and her sister grow up together in a small apartment.' },
+      { id: 'd', text: 'Amara\'s sister leaves for college and they stop speaking.' }
+    ],
+    dropZones: [
+      { id: 'exposition', label: 'Exposition' },
+      { id: 'rising', label: 'Rising Action' },
+      { id: 'climax', label: 'Climax' },
+      { id: 'resolution', label: 'Resolution' }
+    ],
+    correctMapping: { 'exposition': 'c', 'rising': 'd', 'climax': 'a', 'resolution': 'b' },
+    vocabTerms: ['plot structure', 'exposition', 'climax', 'resolution']
+  },
+
+  // More items
+  {
+    id: 28, type: 'SR', domain: 'L-Vocab', dok: 1,
+    passage: null,
+    stem: null,
+    question: 'Which of the following words contains a SUFFIX that indicates it is a noun?',
+    options: [
+      'rapidly',
+      'clarify',
+      'freedom',
+      'careful'
+    ],
+    correct: [2],
+    vocabTerms: ['suffix', 'parts of speech', 'morphology']
+  },
+  {
+    id: 29, type: 'SR', domain: 'C', dok: 2,
+    passage: null,
+    stem: null,
+    question: 'A student wants to construct a multimodal presentation for a school board audience about the need for a new gymnasium. Which combination of modes would BEST serve this specific purpose and audience?',
+    options: [
+      'A personal video diary and a collection of Instagram posts about gym class',
+      'An informal speech with memes and funny images to make the audience laugh',
+      'A formal slide presentation with enrollment data, budget comparisons, and photographs of the current facility',
+      'A handwritten poster with student quotes about why they like gym class'
+    ],
+    correct: [2],
+    vocabTerms: ['multimodal', 'audience', 'purpose', 'text features']
+  },
+  {
+    id: 30, type: 'MS', domain: 'SS', dok: 3,
+    passage: null,
+    stem: null,
+    question: 'A student is revising their essay and reads this paragraph:\n\n"Social media changed communication. People talk differently now. It is hard for some people. Young people use it the most. Old people do not always understand it."\n\nSelect ALL revisions that would MOST improve this paragraph.',
+    options: [
+      'Combine the short sentences using subordinating and coordinating conjunctions to show relationships between ideas',
+      'Add specific statistics or expert evidence to support the general claims being made',
+      'Replace the informal language ("Old people") with precise academic vocabulary',
+      'Add more short sentences to make the paragraph easier to read quickly',
+      'Delete the paragraph entirely and begin the essay with a personal story'
+    ],
+    correct: [0, 1, 2],
+    vocabTerms: ['syntax', 'sentence variety', 'academic vocabulary', 'revision']
+  },
+
+  // ===== SESSION 2: EXTENDED WRITING TASK =====
+  {
+    id: 31, type: 'ESSAY', domain: 'W',
+    isEssay: true,
+    dok: 4,
+    vocabTerms: []
+  }
+];
+
+// ============================================================
+// PASSAGE DATA
+// ============================================================
+const PASSAGES = {
+  P1: {
+    label: 'SOURCE: Literary Text',
+    title: 'The Last Morning',
+    byline: 'An original short story for instructional use',
+    text: `<p>The storm had arrived without warning. Marcus stood at his bedroom window at four in the morning, watching the rain dissolve the streetlights into orange smears. In six hours, a bus would pull away from the corner of Elm and Third and carry him to a city he had only seen in photographs. He pressed his forehead against the cold glass and felt the vibration of thunder still echoing in his chest.</p>
+<p>He had packed his suitcase twice and unpacked it once. The second time, he had stood staring at his father's old compass — the one his grandfather had used to navigate unfamiliar roads — and wondered if he should leave it behind. He put it in the bag. Then he took it out again. Then he left it on the dresser because some things were not meant to be carried forward.</p>
+<p>Downstairs, his mother had left the porch light on. She had not done this since Marcus was twelve, since the night he had stayed out past curfew and she had waited, pale-faced, by the door. She had not said anything tonight. She had simply clicked the switch and gone to bed, which said everything.</p>
+<p>By the time the rain slowed to a whisper, Marcus had made a decision. He picked up his bag and his jacket. He did not go back for the compass. He did not look at his room one final time, cataloguing details the way people do when they know they are leaving something permanently. He walked to the door, stepped outside into the wet dawn, and did not look back.</p>`
+  },
+  P2: {
+    label: 'SOURCE: Informational Text',
+    title: 'Invisible Invaders: Microplastics and the Global Food Chain',
+    byline: 'Adapted from an environmental science article, 2024',
+    text: `<p>Every year, approximately 8 million metric tons of plastic waste enter the world's oceans. Once in the water, larger pieces break down under ultraviolet radiation and wave action into particles smaller than 5 millimeters — what scientists call microplastics. These fragments do not dissolve. They simply become smaller and smaller, until they are invisible to the naked eye.</p>
+<p>What makes microplastics uniquely dangerous is their persistence in the food chain. Small fish mistake these particles for food and consume them. Larger fish eat the smaller fish. Seabirds feed on the larger fish. Studies conducted by NOAA (the National Oceanic and Atmospheric Administration) have found microplastic particles in the tissues of over 700 marine species — including species that end up on dinner plates.</p>
+<p>The full health implications for humans are not yet known. Researchers at the University of Vienna identified microplastics in human blood samples for the first time in 2022. Scientists studying the issue use careful language: they do not yet have conclusive evidence of specific harms, but the presence of foreign plastic particles in human tissue is cause for serious investigation. What is clear is that microplastics have moved far beyond the ocean — they have entered the global food chain, and with it, the human body.</p>`
+  },
+  P3: {
+    label: 'SOURCE PAIR: Two Authors, One Topic',
+    title: 'Article 1: The Economics of Green Space',
+    byline: 'By James Horton, Urban Planning Consultant',
+    text: `<p><strong>Article 1: The Economics of Green Space</strong><br><em>By James Horton, Urban Planning Consultant</em></p>
+<p>Urban community gardens represent one of the most cost-effective investments a city government can make. A 2023 analysis of 47 cities by the American Planning Association found that neighborhoods with established community gardens show property value increases of 9.4% within a three-block radius, generating tax revenue that typically exceeds the program cost within four years.</p>
+<p>Beyond property values, urban gardens reduce city spending in measurable ways. Cities with active urban agriculture programs report reduced stormwater management costs, as planted areas absorb rainfall that would otherwise strain sewer systems. The data is consistent: green urban space pays for itself.</p>
+<hr style="margin:10px 0; border-color:#ccc;">
+<p><strong>Article 2: More Than Food</strong><br><em>By Dr. Renee Okafor, Community Health Nurse and Garden Coordinator</em></p>
+<p>When I walk through the Eastside Community Garden on a Saturday morning, I see neighbors who did not know each other's names six months ago now sharing seeds, recipes, and stories. I see elderly residents who have not left their apartments in weeks coming out into sunlight. I see children learning that food does not originate in plastic packaging.</p>
+<p>The health data supports what I observe daily. A peer-reviewed study in the American Journal of Public Health found that community garden participants consumed 1.4 more servings of fruits and vegetables per day than non-participants. Rates of self-reported anxiety and depression were significantly lower in participants who gardened at least twice per week. The gardens are not just growing food. They are growing health.</p>`
+  }
+};
+
+// ============================================================
+// ESSAY DATA
+// ============================================================
+const ESSAY_DATA = {
+  sources: [
+    {
+      label: 'Source 1',
+      title: 'The Case for Year-Round Schooling',
+      byline: 'Adapted from an education policy report, 2023',
+      text: `<p>American students lose an average of two months of academic progress during summer vacation — a phenomenon researchers call "summer learning loss." For students in low-income households, who have fewer access to educational enrichment activities during summer, the loss is even greater, sometimes reaching three months of reading skills alone.</p>
+<p>In districts that have adopted year-round calendars, results have been encouraging. A 2021 study of California schools found that students in year-round programs performed 7% higher on standardized reading assessments than comparable peers in traditional calendar schools. Teachers in these districts also report that re-teaching time at the start of each school year is dramatically reduced, allowing instruction to begin at higher levels more quickly.</p>
+<p>Critics argue that the traditional school calendar supports family schedules and agricultural economies. However, fewer than 2% of American families work in agriculture today, and childcare costs during extended summers are a significant financial burden for working families. A shift to year-round schooling, with multiple shorter breaks distributed throughout the year, would address these concerns while maintaining learning momentum.</p>`
+    },
+    {
+      label: 'Source 2',
+      title: 'In Defense of Summer',
+      byline: 'Opinion piece by a classroom teacher, 2023',
+      text: `<p>Before policymakers eliminate summer vacation in the name of academic efficiency, they should ask students and teachers what they actually do with that time. Summer is not wasted time — it is different time. It is the time when a student reads a book purely for pleasure, not for an assignment. It is when a teenager gets a first job and learns what school cannot teach. It is when families travel, connect, and give children the kind of unstructured experience that builds creativity and independence.</p>
+<p>The research on summer learning loss is real, but the proposed solution — eliminating long breaks — addresses only one type of learning. The research on intrinsic motivation is equally compelling: students who have extended periods of autonomy and choice develop stronger self-regulation and lifelong reading habits. Compressing the school year into a continuous cycle may improve test scores on narrow measures while diminishing the broader development that enriches academic performance over time.</p>
+<p>What students in under-resourced communities need is not more school — it is better support: funded summer programs, library access, and food security. These targeted interventions address the root causes of summer learning loss without sacrificing the benefits of summer for all students.</p>`
+    },
+    {
+      label: 'Source 3',
+      title: 'What the Research Actually Shows',
+      byline: 'Summary of education research findings, National Education Policy Center, 2022',
+      text: `<p>The debate over year-round schooling often oversimplifies what research actually shows. Studies comparing year-round and traditional calendar schools produce inconsistent results. Some show modest gains in reading and math; others show no significant difference. The quality of instruction, available resources, and demographic factors in each school appear to influence outcomes more than calendar structure alone.</p>
+<p>What the research does show consistently is this: students who experience poverty-related disadvantages are disproportionately affected by extended breaks, regardless of whether the break is in summer or at another point in the year. This suggests that the calendar itself is less important than what students have access to during non-school time.</p>
+<p>Policymakers seeking to improve outcomes for disadvantaged students may find better returns on investment through targeted summer enrichment programs, extended school-day options, and community support services than through wholesale restructuring of the academic calendar. The evidence does not strongly support either side of the year-round debate — it supports nuance.</p>`
+    }
+  ],
+  prompt: `Your school district is considering changing to a year-round school calendar. The school board has asked students to submit written responses to the following question:
+
+<strong>Should your school district adopt a year-round school calendar?</strong>
+
+Using evidence from all three sources, write a well-organized argumentative essay in which you:
+• Clearly state your claim (your position on year-round schooling)
+• Support your claim with relevant evidence from at least two of the three sources
+• Address a counterclaim to your argument and provide a rebuttal
+• Write a strong conclusion
+• Credit your sources when quoting or paraphrasing information`,
+  checklistItems: [
+    'Provide an introduction that guides the focus and clearly establishes my claim',
+    'Organize information in a way that makes sense for my purpose and audience',
+    'Support my reasons and ideas with evidence from multiple sources',
+    'Credit my sources when quoting or paraphrasing information',
+    'Include a counterclaim and rebuttal',
+    'Use transition words, phrases, and clauses to connect ideas',
+    'Provide a strong conclusion',
+    'Use complete sentences and a variety of sentence structures',
+    'Use correct verb tense and active voice',
+    'Check for errors in spelling, capitalization, punctuation, and grammar'
+  ]
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let studentName = '';
+let studentPeriod = '';
+let currentQ = 0;
+let answers = {}; // id -> selected indices or dnd mapping or essay text
+let flagged = {}; // id -> bool
+let timerInterval = null;
+let secondsRemaining = 50 * 60;
+let testStarted = false;
+let dndState = {}; // for drag and drop state
+
+// ============================================================
+// GATE
+// ============================================================
+function startTest() {
+  const name = document.getElementById('gateNameInput').value.trim();
+  const period = document.getElementById('gatePeriodInput').value;
+  if (!name) { alert('Please enter your name to begin.'); return; }
+  if (!period) { alert('Please select your class period to begin.'); return; }
+  studentName = name;
+  studentPeriod = period;
+  document.getElementById('hdrName').textContent = name;
+  document.getElementById('hdrPeriod').textContent = period;
+  document.getElementById('hdrTotal').textContent = ITEMS.length;
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('testScreen').style.display = 'flex';
+  buildPalette();
+  renderQuestion(0);
+  startTimer();
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  timerInterval = setInterval(() => {
+    secondsRemaining--;
+    updateTimerDisplay();
+    if (secondsRemaining <= 0) {
+      clearInterval(timerInterval);
+      submitTest();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('timerDisplay');
+  const m = Math.floor(secondsRemaining / 60);
+  const s = secondsRemaining % 60;
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (secondsRemaining <= 300) {
+    el.classList.add('warning');
+  }
+}
+
+// ============================================================
+// PALETTE
+// ============================================================
+function buildPalette() {
+  const grid = document.getElementById('paletteGrid');
+  grid.innerHTML = '';
+  ITEMS.forEach((item, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'pq-btn';
+    btn.id = `pq_${i}`;
+    btn.textContent = i + 1;
+    btn.onclick = () => goToQuestion(i);
+    grid.appendChild(btn);
+  });
+  updatePalette();
+}
+
+function updatePalette() {
+  ITEMS.forEach((item, i) => {
+    const btn = document.getElementById(`pq_${i}`);
+    if (!btn) return;
+    btn.className = 'pq-btn';
+    if (isAnswered(item)) btn.classList.add('answered');
+    if (i === currentQ) btn.classList.add('current');
+    if (flagged[item.id]) btn.classList.add('flagged');
+  });
+}
+
+function isAnswered(item) {
+  if (item.type === 'ESSAY') {
+    return answers[item.id] && answers[item.id].length > 10;
+  }
+  if (item.type === 'DND') {
+    const s = dndState[item.id] || {};
+    return Object.keys(s).length === item.dropZones.length;
+  }
+  return answers[item.id] && answers[item.id].length > 0;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function navigate(dir) {
+  const newIdx = currentQ + dir;
+  if (newIdx >= 0 && newIdx < ITEMS.length) {
+    goToQuestion(newIdx);
+  } else if (dir > 0 && currentQ === ITEMS.length - 1) {
+    if (confirm('Submit your test now?')) submitTest();
+  }
+}
+
+function goToQuestion(idx) {
+  currentQ = idx;
+  document.getElementById('hdrQNum').textContent = idx + 1;
+  renderQuestion(idx);
+  updatePalette();
+
+  const btnNext = document.getElementById('btnNext');
+  if (idx === ITEMS.length - 1) {
+    btnNext.textContent = 'Submit Test ▶';
+    btnNext.className = 'btn-submit';
+  } else {
+    btnNext.textContent = 'Next ▶';
+    btnNext.className = 'btn-nav-next';
+  }
+
+  // Flag button state
+  const btnFlag = document.getElementById('btnFlag');
+  if (flagged[ITEMS[idx].id]) {
+    btnFlag.className = 'btn-flag flagged';
+    btnFlag.textContent = '🚩 Vocabulary Flagged';
+  } else {
+    btnFlag.className = 'btn-flag';
+    btnFlag.textContent = '🚩 Flag Vocabulary';
+  }
+}
+
+function toggleFlag() {
+  const item = ITEMS[currentQ];
+  flagged[item.id] = !flagged[item.id];
+  const btnFlag = document.getElementById('btnFlag');
+  if (flagged[item.id]) {
+    btnFlag.className = 'btn-flag flagged';
+    btnFlag.textContent = '🚩 Vocabulary Flagged';
+  } else {
+    btnFlag.className = 'btn-flag';
+    btnFlag.textContent = '🚩 Flag Vocabulary';
+  }
+  updatePalette();
+}
+
+// ============================================================
+// RENDER QUESTION
+// ============================================================
+function renderQuestion(idx) {
+  const item = ITEMS[idx];
+  const area = document.getElementById('questionArea');
+  area.innerHTML = '';
+
+  if (item.type === 'ESSAY') {
+    renderEssay(area, item);
+    return;
+  }
+
+  const passage = item.passage ? PASSAGES[item.passage] : null;
+
+  if (passage) {
+    // Split layout
+    const secHeader = document.createElement('div');
+    secHeader.className = 'section-header';
+    secHeader.textContent = 'SESSION 1 — INTERPRETING TEXTS: READING';
+    area.appendChild(secHeader);
+
+    const pc = document.createElement('div');
+    pc.className = 'passage-container';
+
+    const pp = document.createElement('div');
+    pp.className = 'passage-pane';
+    pp.innerHTML = `<h3>${passage.label}</h3><div class="passage-title">${passage.title}</div><div class="passage-byline">${passage.byline}</div>${passage.text}`;
+    pc.appendChild(pp);
+
+    const qp = document.createElement('div');
+    qp.className = 'question-pane';
+    qp.appendChild(buildQContent(item));
+    pc.appendChild(qp);
+
+    area.appendChild(pc);
+  } else {
+    const secHeader = document.createElement('div');
+    secHeader.className = 'section-header';
+    if (idx < 25) secHeader.textContent = 'SESSION 1 — INTERPRETING TEXTS: READING & LANGUAGE';
+    else secHeader.textContent = 'SESSION 1 — TECHNOLOGY-ENHANCED ITEMS';
+    area.appendChild(secHeader);
+
+    const sq = document.createElement('div');
+    sq.className = 'standalone-question';
+    sq.appendChild(buildQContent(item));
+    area.appendChild(sq);
+  }
+}
+
+function buildQContent(item) {
+  const wrap = document.createElement('div');
+
+  // Top bar
+  const topBar = document.createElement('div');
+  topBar.className = 'q-top-bar';
+  const leftBadges = document.createElement('div');
+  leftBadges.innerHTML = `<span class="qnum-badge">Question ${item.id}</span>
+    <span class="domain-badge">${domainLabel(item.domain)}</span>
+    <span class="dok-badge">DOK ${item.dok}</span>
+    ${item.type === 'MS' ? '<span class="item-type-badge">Multi-Select</span>' : ''}
+    ${item.type === 'DND' ? '<span class="item-type-badge">Drag &amp; Drop</span>' : ''}`;
+  topBar.appendChild(leftBadges);
+  wrap.appendChild(topBar);
+
+  // Stem (passage intro shown in passage pane)
+  if (item.stem && !item.passage) {
+    const stemEl = document.createElement('div');
+    stemEl.className = 'q-stem';
+    stemEl.style.fontStyle = 'italic';
+    stemEl.style.color = '#555';
+    stemEl.style.marginBottom = '12px';
+    stemEl.textContent = item.stem;
+    wrap.appendChild(stemEl);
+  }
+
+  // Question
+  const qEl = document.createElement('div');
+  qEl.className = 'q-stem';
+  qEl.innerHTML = item.question.replace(/\n/g, '<br>');
+  wrap.appendChild(qEl);
+
+  if (item.type === 'MS') {
+    const inst = document.createElement('div');
+    inst.className = 'multiselect-instruction';
+    inst.textContent = 'Select ALL correct answers.';
+    wrap.appendChild(inst);
+  }
+
+  if (item.type === 'SR' || item.type === 'MS') {
+    wrap.appendChild(buildChoiceOptions(item));
+  } else if (item.type === 'DND') {
+    wrap.appendChild(buildDnD(item));
+  }
+
+  return wrap;
+}
+
+function buildChoiceOptions(item) {
+  const list = document.createElement('ul');
+  list.className = 'options-list';
+  const letters = ['A','B','C','D','E','F'];
+  item.options.forEach((opt, i) => {
+    const li = document.createElement('li');
+    li.className = 'option-item';
+
+    const inputType = item.type === 'MS' ? 'checkbox' : 'radio';
+    const inputName = `q${item.id}`;
+
+    const input = document.createElement('input');
+    input.type = inputType;
+    input.name = inputName;
+    input.value = i;
+
+    // Restore state
+    const cur = answers[item.id] || [];
+    if (cur.includes(i)) {
+      input.checked = true;
+      li.classList.add('selected');
+    }
+
+    const letterSpan = document.createElement('span');
+    letterSpan.className = 'option-letter';
+    letterSpan.textContent = letters[i];
+
+    const textSpan = document.createElement('span');
+    textSpan.innerHTML = opt;
+
+    li.appendChild(input);
+    li.appendChild(letterSpan);
+    li.appendChild(textSpan);
+
+    li.addEventListener('click', () => {
+      if (item.type === 'SR') {
+        // Deselect all
+        list.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+        list.querySelectorAll('input').forEach(el => el.checked = false);
+        input.checked = true;
+        li.classList.add('selected');
+        answers[item.id] = [i];
+      } else {
+        input.checked = !input.checked;
+        if (input.checked) {
+          li.classList.add('selected');
+          if (!answers[item.id]) answers[item.id] = [];
+          if (!answers[item.id].includes(i)) answers[item.id].push(i);
+        } else {
+          li.classList.remove('selected');
+          answers[item.id] = (answers[item.id] || []).filter(x => x !== i);
+        }
+      }
+      updatePalette();
+    });
+
+    list.appendChild(li);
+  });
+  return list;
+}
+
+function buildDnD(item) {
+  if (!dndState[item.id]) dndState[item.id] = {};
+
+  const container = document.createElement('div');
+  container.className = 'dnd-container';
+
+  // Bank
+  const bankLabel = document.createElement('div');
+  bankLabel.className = 'dnd-label';
+  bankLabel.textContent = 'Drag these items:';
+  container.appendChild(bankLabel);
+
+  const bank = document.createElement('div');
+  bank.className = 'drag-bank';
+  bank.id = `bank_${item.id}`;
+
+  item.dndItems.forEach(di => {
+    // Only show in bank if not placed
+    const placed = Object.values(dndState[item.id]).includes(di.id);
+    if (!placed) {
+      bank.appendChild(createDragItem(di, item));
+    }
+  });
+
+  container.appendChild(bank);
+
+  // Drop zones
+  const zonesLabel = document.createElement('div');
+  zonesLabel.className = 'dnd-label';
+  zonesLabel.style.marginTop = '14px';
+  zonesLabel.textContent = 'Drop into the correct category:';
+  container.appendChild(zonesLabel);
+
+  item.dropZones.forEach(zone => {
+    const row = document.createElement('div');
+    row.className = 'drop-row';
+
+    const rowLabel = document.createElement('div');
+    rowLabel.className = 'drop-row-label';
+    rowLabel.textContent = zone.label;
+    row.appendChild(rowLabel);
+
+    const dropZone = document.createElement('div');
+    dropZone.className = 'drop-zone';
+    dropZone.id = `zone_${item.id}_${zone.id}`;
+
+    const placeholder = document.createElement('span');
+    placeholder.className = 'zone-label';
+    placeholder.textContent = 'Drop here';
+    dropZone.appendChild(placeholder);
+
+    // Restore placed item
+    const placedItemId = dndState[item.id][zone.id];
+    if (placedItemId) {
+      const di = item.dndItems.find(x => x.id === placedItemId);
+      if (di) dropZone.appendChild(createDragItem(di, item));
+    }
+
+    // Drop events
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const draggedId = e.dataTransfer.getData('text/plain');
+      const draggedItem = item.dndItems.find(x => x.id === draggedId);
+      if (!draggedItem) return;
+
+      // Remove from current zone if placed
+      Object.keys(dndState[item.id]).forEach(zId => {
+        if (dndState[item.id][zId] === draggedId) {
+          delete dndState[item.id][zId];
+          const oldZone = document.getElementById(`zone_${item.id}_${zId}`);
+          if (oldZone) oldZone.querySelectorAll('.drag-item').forEach(el => el.remove());
+        }
+      });
+
+      // Remove current occupant of this zone -> back to bank
+      const currentOccupant = dndState[item.id][zone.id];
+      if (currentOccupant) {
+        const bankEl = document.getElementById(`bank_${item.id}`);
+        const occupantDi = item.dndItems.find(x => x.id === currentOccupant);
+        if (bankEl && occupantDi) bankEl.appendChild(createDragItem(occupantDi, item));
+        delete dndState[item.id][zone.id];
+      }
+
+      // Place
+      dndState[item.id][zone.id] = draggedId;
+      dropZone.querySelectorAll('.drag-item').forEach(el => el.remove());
+      dropZone.appendChild(createDragItem(draggedItem, item));
+
+      // Remove from bank
+      const bankEl = document.getElementById(`bank_${item.id}`);
+      if (bankEl) {
+        bankEl.querySelectorAll('.drag-item').forEach(el => {
+          if (el.dataset.id === draggedId) el.remove();
+        });
+      }
+
+      // Sync answers
+      answers[item.id] = dndState[item.id];
+      updatePalette();
+    });
+
+    row.appendChild(dropZone);
+    container.appendChild(row);
+  });
+
+  // Bank drop (for returning items)
+  bank.addEventListener('dragover', e => { e.preventDefault(); bank.style.borderColor = '#666'; });
+  bank.addEventListener('dragleave', () => bank.style.borderColor = ''); 
+  bank.addEventListener('drop', e => {
+    e.preventDefault();
+    bank.style.borderColor = '';
+    const draggedId = e.dataTransfer.getData('text/plain');
+    // Find which zone it came from
+    Object.keys(dndState[item.id]).forEach(zId => {
+      if (dndState[item.id][zId] === draggedId) {
+        delete dndState[item.id][zId];
+        const oldZone = document.getElementById(`zone_${item.id}_${zId}`);
+        if (oldZone) oldZone.querySelectorAll('.drag-item').forEach(el => el.remove());
+      }
+    });
+    const draggedItem = item.dndItems.find(x => x.id === draggedId);
+    if (draggedItem && !bank.querySelector(`[data-id="${draggedId}"]`)) {
+      bank.appendChild(createDragItem(draggedItem, item));
+    }
+    answers[item.id] = dndState[item.id];
+    updatePalette();
+  });
+
+  return container;
+}
+
+function createDragItem(di, item) {
+  const el = document.createElement('div');
+  el.className = 'drag-item';
+  el.textContent = di.text;
+  el.draggable = true;
+  el.dataset.id = di.id;
+  el.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', di.id);
+    el.classList.add('dragging');
+  });
+  el.addEventListener('dragend', () => el.classList.remove('dragging'));
+  return el;
+}
+
+function renderEssay(area, item) {
+  const secHeader = document.createElement('div');
+  secHeader.className = 'section-header';
+  secHeader.textContent = 'SESSION 2 — EXTENDED WRITING TASK (8 Points)';
+  area.appendChild(secHeader);
+
+  const section = document.createElement('div');
+  section.className = 'essay-section';
+
+  // Sources
+  const srcGrid = document.createElement('div');
+  srcGrid.className = 'essay-sources';
+  ESSAY_DATA.sources.forEach(src => {
+    const card = document.createElement('div');
+    card.className = 'source-card';
+    card.innerHTML = `<div class="source-card-header">${src.label}: ${src.title}</div>
+      <div class="source-card-body">
+        <div class="byline">${src.byline}</div>
+        ${src.text}
+      </div>`;
+    srcGrid.appendChild(card);
+  });
+  section.appendChild(srcGrid);
+
+  // Prompt
+  const promptBox = document.createElement('div');
+  promptBox.className = 'essay-prompt-box';
+  promptBox.innerHTML = `<h3>Writing Task</h3>
+    <p>${ESSAY_DATA.prompt}</p>
+    <div class="writers-checklist">
+      <h4>Writer's Checklist — In my well-written text, I made sure to:</h4>
+      ${ESSAY_DATA.checklistItems.map(c => `<div class="checklist-item">${c}</div>`).join('')}
+    </div>`;
+  section.appendChild(promptBox);
+
+  // Textarea
+  const textarea = document.createElement('textarea');
+  textarea.id = 'essayTextarea';
+  textarea.placeholder = 'Type your essay here. Use all three sources to support your argument. Remember to include a counterclaim and rebuttal, and credit your sources.';
+  textarea.value = answers[item.id] || '';
+  textarea.addEventListener('input', () => {
+    answers[item.id] = textarea.value;
+    updatePalette();
+    const words = textarea.value.trim().split(/\s+/).filter(w => w.length > 0).length;
+    wordCount.textContent = `Word count: ${words}`;
+  });
+  section.appendChild(textarea);
+
+  const wordCount = document.createElement('div');
+  wordCount.className = 'essay-word-count';
+  const wc = (answers[item.id] || '').trim().split(/\s+/).filter(w => w.length > 0).length;
+  wordCount.textContent = `Word count: ${answers[item.id] ? wc : 0}`;
+  section.appendChild(wordCount);
+
+  area.appendChild(section);
+}
+
+// ============================================================
+// DOMAIN LABELS
+// ============================================================
+function domainLabel(d) {
+  const map = {
+    'T-Narrative': 'Techniques: Narrative',
+    'T-Expository': 'Techniques: Expository',
+    'T-Argumentative': 'Techniques: Argumentative',
+    'T-Poetic': 'Techniques: Poetic',
+    'T-Periods': 'Periods & Movements',
+    'C': 'Context',
+    'SS': 'Structure & Style',
+    'RA': 'Research & Analysis',
+    'L-Vocab': 'Language: Vocabulary',
+    'L-Grammar': 'Language: Grammar',
+    'W': 'Extended Writing'
+  };
+  return map[d] || d;
+}
+
+// ============================================================
+// SCORING
+// ============================================================
+function scoreItem(item) {
+  if (item.type === 'ESSAY') return null;
+  if (item.type === 'DND') {
+    const state = dndState[item.id] || {};
+    let allCorrect = true;
+    item.dropZones.forEach(zone => {
+      if (state[zone.id] !== item.correctMapping[zone.id]) allCorrect = false;
+    });
+    return allCorrect;
+  }
+  if (item.type === 'SR') {
+    const sel = answers[item.id] || [];
+    if (sel.length === 0) return null;
+    return sel[0] === item.correct[0];
+  }
+  if (item.type === 'MS') {
+    const sel = answers[item.id] || [];
+    if (sel.length === 0) return null;
+    const selSorted = [...sel].sort().join(',');
+    const corrSorted = [...item.correct].sort().join(',');
+    return selSorted === corrSorted;
+  }
+  return null;
+}
+
+function getAchievementLevel(pct) {
+  if (pct >= 85) return { level: 'Distinguished Learner', cls: 'badge-distinguished' };
+  if (pct >= 70) return { level: 'Proficient Learner', cls: 'badge-proficient' };
+  if (pct >= 55) return { level: 'Developing Learner', cls: 'badge-developing' };
+  return { level: 'Beginning Learner', cls: 'badge-beginning' };
+}
+
+// ============================================================
+// SUBMIT
+// ============================================================
+function submitTest() {
+  clearInterval(timerInterval);
+  const timeUsed = 50 * 60 - secondsRemaining;
+
+  // Score
+  const srItems = ITEMS.filter(i => i.type !== 'ESSAY');
+  let correct = 0;
+  const results = srItems.map(item => {
+    const r = scoreItem(item);
+    if (r === true) correct++;
+    return { item, result: r };
+  });
+
+  const pct = Math.round((correct / srItems.length) * 100);
+  const ach = getAchievementLevel(pct);
+
+  // Domain breakdown
+  const domains = {};
+  results.forEach(({ item, result }) => {
+    const d = domainLabel(item.domain);
+    if (!domains[d]) domains[d] = { correct: 0, total: 0 };
+    domains[d].total++;
+    if (result === true) domains[d].correct++;
+  });
+
+  // Flagged
+  const flaggedNums = ITEMS.filter(i => flagged[i.id]).map(i => i.id);
+
+  // Hide test, show results
+  document.getElementById('testScreen').style.display = 'none';
+  const resultsEl = document.getElementById('resultsScreen');
+  resultsEl.style.display = 'block';
+
+  document.getElementById('resStudentInfo').textContent = `${studentName} | ${studentPeriod} | Completed: ${new Date().toLocaleString()}`;
+
+  const badge = document.getElementById('resAchievementBadge');
+  badge.className = `achievement-badge ${ach.cls}`;
+  badge.innerHTML = `${ach.level}<br><span style="font-size:22px;font-weight:bold;">${pct}%</span>`;
+
+  document.getElementById('resScoreNum').textContent = `${correct}/${srItems.length}`;
+  document.getElementById('resScoreLabel').textContent = 'selected-response items correct';
+
+  const m = Math.floor(timeUsed / 60);
+  const s = timeUsed % 60;
+  document.getElementById('resTimeUsed').textContent = `${m}m ${s}s`;
+
+  // Domain bars
+  const domBars = document.getElementById('resDomainBars');
+  domBars.innerHTML = '';
+  Object.entries(domains).forEach(([d, data]) => {
+    const dpct = data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0;
+    const barDiv = document.createElement('div');
+    barDiv.className = 'domain-bar';
+    barDiv.innerHTML = `<div class="domain-bar-label"><span>${d}</span><span>${data.correct}/${data.total} (${dpct}%)</span></div>
+      <div class="domain-bar-track"><div class="domain-bar-fill" style="width:${dpct}%"></div></div>`;
+    domBars.appendChild(barDiv);
+  });
+
+  // Item review grid
+  const reviewGrid = document.getElementById('resReviewGrid');
+  reviewGrid.innerHTML = '';
+  results.forEach(({ item, result }) => {
+    const div = document.createElement('div');
+    div.className = `review-item ${result === true ? 'correct' : result === false ? 'incorrect' : 'skipped'}`;
+    div.innerHTML = `<div class="ri-num">${result === true ? '✓' : result === false ? '✗' : '—'} Q${item.id}</div><div class="ri-domain">${domainLabel(item.domain).split(':')[0]}</div>`;
+    reviewGrid.appendChild(div);
+  });
+
+  // Flagged
+  const flaggedList = document.getElementById('resFlaggedList');
+  flaggedList.innerHTML = '';
+  if (flaggedNums.length === 0) {
+    flaggedList.innerHTML = '<span style="color:#888;font-size:13px;">No items were flagged.</span>';
+  } else {
+    flaggedNums.forEach(num => {
+      const tag = document.createElement('span');
+      tag.className = 'flag-tag';
+      const item = ITEMS.find(i => i.id === num);
+      tag.textContent = `Q${num} — ${domainLabel(item ? item.domain : '')}`;
+      flaggedList.appendChild(tag);
+    });
+  }
+
+  // Auto-submit data
+  submitData({
+    studentName,
+    studentPeriod,
+    totalScore: correct,
+    totalQuestions: srItems.length,
+    percentCorrect: pct,
+    achievementLevel: ach.level,
+    domainBreakdown: Object.entries(domains).map(([name, data]) => ({
+      domain: name,
+      correct: data.correct,
+      total: data.total,
+      percent: data.total > 0 ? Math.round((data.correct / data.total) * 100) : 0
+    })),
+    vocabFlags: flaggedNums,
+    essayText: answers[31] || '',
+    timestamp: new Date().toISOString(),
+    timeUsed
+  });
+}
+
+async function submitData(payload) {
+  const url = 'PASTE_YOUR_APPS_SCRIPT_URL_HERE';
+  if (url === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') return;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.warn('Data submission failed:', e);
+  }
+}
+</script>
+</body>
+</html>
